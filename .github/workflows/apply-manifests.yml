@@ -30,15 +30,6 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.CONFIG }}" | base64 -d > $HOME/.kube/config
 
-      - name: "apply-manifests : add secret"
-        run: |
-          yc iam key create --service-account-name "sa--terraform" --output /tmp/sa_key.json
-          kubectl create secret docker-registry cr--credentials \
-            --docker-server=cr.yandex \
-            --docker-username=json_key \
-            --docker-password="$(cat /tmp/sa_key.json)" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
       - name: "apply-manifests : get image tag"
         run: |
           if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
