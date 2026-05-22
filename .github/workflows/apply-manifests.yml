@@ -32,11 +32,12 @@ jobs:
 
       - name: "apply-manifests : add secret"
         run: |
+          SA_KEY="${{ secrets.SA_KEY }}"
           kubectl create secret docker-registry cr--credentials \
-          --docker-server=cr.yandex \
-          --docker-username=json_key \
-          --docker-password="${{ secrets.SA_KEY }}" \
-          --dry-run=client -o yaml | kubectl apply -f -
+            --docker-server=cr.yandex \
+            --docker-username=json_key \
+            --docker-password="$SA_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: "apply-manifests : get image tag"
         run: |
