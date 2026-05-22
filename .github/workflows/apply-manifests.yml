@@ -1,0 +1,68 @@
+name: apply-manifests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag"
+        required: true
+
+env:
+  APP_NAME: application
+  NAMESPACE: default
+
+jobs:
+  apply-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "apply-manifests : checkout"
+        uses: actions/checkout@v4
+
+      - name: "apply-manifests : setup kubectl"
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: "apply-manifests : setup kubeconfig"
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.CONFIG }}" | base64 -d > $HOME/.kube/config
+
+      - name: "apply-manifests : add secret"
+        run: |
+          kubectl create secret docker-registry cr--credentials \
+          --docker-server=cr.yandex \
+          --docker-username=json_key \
+          --docker-password="${{ secrets.SA_KEY }}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: "apply-manifests : get image tag"
+        run: |
+          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            echo "TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
+          else
+            CURRENT=$(kubectl get deployment ${{ env.APP_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "")
+            if [[ -n "$CURRENT" ]]; then
+              if [[ "$CURRENT" == *"sha256:"* ]]; then
+                TAG=$(echo "$CURRENT" | cut -d: -f3)
+              else
+                TAG=$(echo "$CURRENT" | cut -d: -f2)
+              fi
+            else
+              TAG=latest
+            fi
+          fi
+
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: "apply-manifests : apply manifests"
+        run: |
+          export REG_ID="${{ secrets.REG_ID }}"
+          export APP_NAME="${{ env.APP_NAME }}"
+          export TAG="${{ env.TAG }}"
+
+          for manifest in *.yml; do
+            envsubst < "$manifest" | kubectl apply -f -
+          done
