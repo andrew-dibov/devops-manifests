@@ -32,7 +32,7 @@ jobs:
 
       - name: "apply-manifests : add secret"
         run: |
-          echo "${{ secrets.SA_KEY }}" > /tmp/sa_key.json
+          yc iam key create --service-account-name "sa--terraform" --output /tmp/sa_key.json
           kubectl create secret docker-registry cr--credentials \
             --docker-server=cr.yandex \
             --docker-username=json_key \
