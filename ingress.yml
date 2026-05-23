@@ -84,3 +84,25 @@ spec:
                 name: kube-prometheus-stack-alertmanager
                 port:
                   number: 9093
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: atlantis-ingress
+  namespace: atlantis
+
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: atlantis.catchmemobbin.strangled.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: atlantis
+                port:
+                  number: 80
