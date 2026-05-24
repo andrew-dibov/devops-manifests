@@ -5,7 +5,7 @@ metadata:
   name: ${APP_NAME}-monitor
   namespace: default
   labels:
-    release: kube-prometheus-stack
+    release: prometheus
 
 spec:
   selector:
