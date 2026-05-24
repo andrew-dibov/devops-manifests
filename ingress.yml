@@ -37,7 +37,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-grafana
+                name: prometheus-grafana
                 port:
                   number: 80
 
@@ -59,7 +59,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-prometheus
+                name: prometheus-kube-prometheus-prometheus
                 port:
                   number: 9090
 
@@ -81,7 +81,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kube-prometheus-stack-alertmanager
+                name: prometheus-kube-prometheus-alertmanager
                 port:
                   number: 9093
 
