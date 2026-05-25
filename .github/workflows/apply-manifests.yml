@@ -8,6 +8,7 @@ on:
       image_tag:
         description: "Docker image tag"
         required: true
+        type: string
 
 env:
   APP_NAME: application
@@ -33,7 +34,7 @@ jobs:
       - name: "apply-manifests : get image tag"
         run: |
           if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
-            echo "TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
+            TAG=${{ github.event.inputs.image_tag }}
           else
             CURRENT=$(kubectl get deployment ${{ env.APP_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "")
             if [[ -n "$CURRENT" ]]; then
