@@ -10,6 +10,6 @@ kubectl create secret docker-registry cr--credentials \
   --docker-password="$(cat iam_key.json)"
 
 gh workflow list
-gh workflow run apply-manifests -f image_tag=latest --ref main
+gh workflow run apply-manifests.yml -f image_tag=latest --ref main
 gh run list --workflow="apply-manifests.yml"
 ```
