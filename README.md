@@ -1,27 +1,27 @@
-# Kubernetes манифесты
+# Manifests
 
-Декларативное описание ресурсов [devops](https://github.com/andrew-dibov/devops) для развертывания [application](https://github.com/andrew-dibov/devops-application) и сервисов предыдущих этапов. Применение манифестов происходит через GitHub Actions автоматически при изменениях или вручную с указанием нужной версии.
+Декларативное описание ресурсов для развертывания [application](https://github.com/andrew-dibov/devops-application) и сервисов предыдущих этапов. Применение манифестов через GitHub Actions при изменении или вручную.
 
 ## Архитектура
 
-> Проект опирается на [application](https://github.com/andrew-dibov/devops-application)
+> Манифесты подразумевают готовность [bootstrap](https://github.com/andrew-dibov/devops-bootstrap), [network](https://github.com/andrew-dibov/devops-network), [kubernetes](https://github.com/andrew-dibov/devops-kubernetes) и [application](https://github.com/andrew-dibov/devops-application)
 
-### Слой 1 : GitOps пайплайн : GitHub Actions
+### Слой 1 : Манифесты : Kubernetes
 
-| Workflow | Триггер | Действия |
+| Манифест | Ресурс | Назначение |
 | :-- | :-- | :-- |
-| `apply-manifests` | Push в `main` или через `workflow_dispatch` | Установка `kubectl` -> определение тега -> подстановка переменных окружения -> применение манифестов |
+| `deployment` | Deployment `application` | 4 реплики приложения с Rolling Update |
+| `service` | Service `application-svc` | NodePort |
+| `serviceMonitor` | ServiceMonitor `application-monitor` | Метрики приложения по `/metrics` |
+| `ingress` | Ingress | Веб-приложение и интерфейсы Grafana, Prometheus и Atlantis |
 
-### Слой 2 : Манифесты : Kubernetes
+### Слой 2 : GitOps : GitHub Actions
 
-| Файл | Ресурс | Назначение |
+| Пайплайн | Триггер | Действия |
 | :-- | :-- | :-- |
-| `deployment` | Deployment : `application` | 4 реплики приложения, использование Rolling Update, параметризация переменными окружения |
-| `service` | Service : `application-svc` | NodePort |
-| `serviceMonitor` | ServiceMonitor : `application-monitor` | Сбор метрик приложения по эндпоинту `/metrics` |
-| `ingress` | Ingress | Веб-приложение и интерфейсоы Grafana, Prometheus, Alertmanager и Atlantis |
+| `apply-manifests` | Push в ветку `main` или выполнение `workflow_dispatch` | Установка и настройка `kubectl` -> определение тега -> подстановка переменных окружения -> применение манифестов |
 
-### Слой 3 : Автоматическая конфигурация : Bash
+### Слой 3 : Конфигурация репозитория : Bash
 
 Скрипт создает секрет в кластере и обновляет секреты репозитория :
 
@@ -30,17 +30,17 @@
 | `CONFIG` | Содержимое `kubeconfig` |
 | `REG_ID` | Идентификатор реестра контейнеров |
 
-### Слой 4 : Интеграция с мониторингом : Kubernetes
+### Слой 4 : Observability : Kubernetes
 
-ServiceMonitor позволяет Prometheus автоматически обнаруживать и собирать метрики приложений по эндпоинту `/metrics`, реализуя observability без ручной настройки.
+ServiceMonitor позволяет Prometheus автоматически обнаруживать и собирать метрики приложения по эндпоинту `/metrics` без ручной настройки.
 
 ## Технологии и навыки
 
 | Категория | Технологии/Инструменты | Навыки |
 | :-- | :-- | :-- |
-| **GitOps** | GitHub Actions | Автоматическое применение манифестов, параметризация переменными окружения |
-| **Kubernetes** | Deployment, Service, Ingress, ServiceMonitor, Secrets | Управление жизненным циклом приложения, реализация Ingress, интеграция с Prometheus |
-| **Automation** | Bash, CLI | Автоматическая конфигурация репозитория и создание секрета в кластере |
+| **GitOps & CI/CD** | GitHub Actions | Настройка пайплайнов и управление секретами |
+| **Orchestration** | Deployment, Service, Ingress, ServiceMonitor, Secrets | Управление жизненным циклом приложения, реализация Ingress, интеграция с Prometheus |
+| **Automation** | Bash, CLI | Автоматическая конфигурация репозитория |
 | **Security** | GitHub Secrets, Kubernetes Secrets | Безопасное хранение и передача данных |
 | **Observability** | ServiceMonitor | Сбор метрик приложения через CRD |
 
